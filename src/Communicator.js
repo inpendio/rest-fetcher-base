@@ -185,9 +185,9 @@ class Communicator {
     endOption = deepMerge(object.options, getBody(object.params));
     const endPointUrl = constructUrl(object.url, object.params, this.baseUrl);
     /* if no dispatch return promise */
-    if (!this.dispatch || this.dispatch === null) {
+    /* if (!this.dispatch || this.dispatch === null) {
       return this.fetch(endPointUrl, endOption);
-    }
+    } */
     /* dispatch action start */
     if (this.dispatch && this.actionStart) {
       this.dispatch(this.actionStart(name, endPointUrl, endOption));
@@ -239,88 +239,6 @@ class Communicator {
           this.dispatch(this.actionError(name, res, e.message));
         }
       });
-    /* if (this.dispatch) {
-      this.fetch(endPointUrl, endOption)
-        .then((response) => {
-          res = {
-            ok: response.ok,
-            redirected: response.redirected,
-            status: response.status,
-            type: response.type,
-            url: response.url,
-          };
-          return Promise.all([response[expected](), Promise.resolve(res)]);
-        })
-        .then((json) => {
-          if (this.dispatch && this.actionEnd) {
-            this.dispatch(this.actionEnd(name, json[0], json[1]));
-          }
-          if (this.postfetchPool[name]) {
-            let pfObj = {
-              actions: this.actions,
-              getState: this.getState,
-              dispatch: this.dispatch,
-              data: json[0],
-              helpers: this.getHelpers(),
-            };
-            const pf = isArray(this.postfetchPool[name])
-              ? this.postfetchPool[name]
-              : [this.postfetchPool[name]];
-            pf.forEach((e) => {
-              const rpf = e(pfObj);
-              if (rpf) pfObj = deepMerge(pfObj, rpf);
-            });
-            return Promise.resolve(pfObj.data);
-          }
-          return Promise.resolve(json[0]);
-        })
-        .catch((e) => {
-          if (this.dispatch && this.actionError) {
-            this.dispatch(this.actionError(name, res, e.message));
-          }
-        });
-    } else {
-      return this.fetch(endPointUrl, endOption)
-        .then((response) => {
-          res = {
-            ok: response.ok,
-            redirected: response.redirected,
-            status: response.status,
-            type: response.type,
-            url: response.url,
-          };
-          return Promise.all([response[expected](), Promise.resolve(res)]);
-        })
-        .then((json) => {
-          if (this.dispatch && this.actionEnd) {
-            this.dispatch(this.actionEnd(name, json[0], json[1]));
-          }
-          if (this.postfetchPool[name]) {
-            let pfObj = {
-              actions: this.actions,
-              getState: this.getState,
-              dispatch: this.dispatch,
-              data: json[0],
-              helpers: this.getHelpers(),
-            };
-            const pf = isArray(this.postfetchPool[name])
-              ? this.postfetchPool[name]
-              : [this.postfetchPool[name]];
-            pf.forEach((e) => {
-              const rpf = e(pfObj);
-              if (rpf) pfObj = deepMerge(pfObj, rpf);
-            });
-            return Promise.resolve(pfObj.data);
-          }
-          return Promise.resolve(json[0]);
-        })
-        .catch((e) => {
-          if (this.dispatch && this.actionError) {
-            this.dispatch(this.actionError(name, res, e.message));
-          }
-        });
-    }
-    return true; */
   };
 }
 

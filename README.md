@@ -2,7 +2,7 @@
 
 Small library for creating API endpoint calls and other fetch calls. Can be used in any project and be integrated with redux, context or any other state management library.
 
-This is continiation of original project:
+This is continuation of original project:
 
 [https://github.com/klooperator/redux-rest-fetcher](https://github.com/klooperator/redux-rest-fetcher)
 

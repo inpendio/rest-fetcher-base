@@ -1,23 +1,21 @@
-# react-redux-fetcher
+# rest-fetcher-base
 
-**This library was made for my personal project. Not all use cases are tested. I welcome testers, sugestions, pull requests etc.**
+Small library for creating API endpoint calls and other fetch calls. Can be used in any project and be integrated with redux, context or any other state management library.
 
-Small library for creating API endpoint calls and other fetch calls. Can be used in any project, but is meant to be used with redux to dispatch results to store.
+This is continiation of original project:
 
-Small, treeshaked lodash dependency.
-
-Original at: [https://github.com/klooperator/redux-rest-fetcher](https://github.com/klooperator/redux-rest-fetcher)
+[https://github.com/klooperator/redux-rest-fetcher](https://github.com/klooperator/redux-rest-fetcher)
 
 ## Install
 
 ```
-npm install redux-rest-fetcher --save
+npm install rest-fetcher-base --save
 ```
 ```
-yarn add redux-rest-fetcher
+yarn add rest-fetcher-base
 ```
 ```
-bower install redux-rest-fetcher --save
+bower install rest-fetcher-base --save
 ```
 
 ## Description & example
@@ -73,24 +71,6 @@ api.setPrefix('api@@');
 //and of course api calls
 api.setEndpoints(apiCalls);
 ```
-At this point redux-rest-fetcher is ready to be passed to your store. Extract reducer from it
-```javascript
-const apiReducer = api.getReducer()
-```
-and pass it to your store to be incorporated in your ```combineReducer()```
-```javascript
-const rootReducer = combineReducer({
-	something,
-	apiReducer,
-	somethingElse
-});
-```
-Once your store is created and populated with ```@@INIT```, pass a dispatcher to api.
-
-```javascript
-api.setDispatcher(store.dispatch)
-```
-Now any time you call you api calls, results will be placed to redux store.
 
 ## Creating calls
 
@@ -214,7 +194,7 @@ api.login({body: obj});
 api.login({body: JSON.stringify(obj)});
 ```
 ####  GET params
-You can past your get params as object with key ```GET```. It will be parsed and the result will be attached to your call URL.
+You can past your get params as object with key ```GET``` but also any key-pair that is not either forbiden or not listed as part of call (```url:'api/:id'```) will become part of get params. It will be parsed and the result will be attached to your call URL.
 ```javascript
 api.someService({
     GET:{
@@ -233,15 +213,54 @@ Default expect is ```json```.
 api.getText({expected: 'text'})
 ```
 >Of course that means ```body```, ```GET``` and ```expected``` are reserved and do not make keys in url params with those keywords (```url/api/:GET``` or ```uer/api/:body```)
-## Using without redux
-You can use this library without redux. If you don't pass dispatch function to the library instance you will receive a fetch promise that you need to resolve yourself.
-## Roadmap
+Reserved keys are: ```'expected', 'GET', 'body'```
+## Lifecyle
+On call this method will be called in order:
+```
+prefetch [array<func>]
+-dispatch start
+fetch call
+-dispatch end
+postfetch [array<func>]
+```
+### Prefetch
+Array that accepts and executes functions. Function will receive object with current call:
+```
+options
+params
+actions (all registrated calls)
+url of the call
+dispatch function if one exists
+getState function if one exist
+helpers (deepMerge)
+```
+This is called before body is extracted and final url is constructed. It perfect to insert some dynamic data like special headers, keys,etc. or to dispatch some extra action.
 
-1. Test sending formData, files and other non JSON cases
-2. Add postfetch tranformer methods like:
-    * add to array
-    * soft data update
-3. Resolve loading flag to be per call and as pool globaly
-4. Remove lodash dependency
-5. Fix rollup setup
+### Postfetch
+Array that accepts and executes functions. Function will receive object with current call:
+```
+actions (all registrated calls)
+data as raw data received from server
+dispatch function if one exists
+getState function if one exist
+helpers (deepMerge)
+```
+This is called after data is received and unpacked from server. You can either dispatch some action from here. After this call a promise is returned with data.
+
+###-dispatch start && -dispatch end
+A call made before actual fetching has started. A dispatch function will call actionStart that will receive this params:
+```
+name of the action
+url final
+options of that call
+```
+if dispatch or actionStart are not set this will not be called.
+Same with dispatch end. A actionEnd must be provided.
+actionEnd will receive:
+```
+name of the call
+data
+call metadata
+```
+
 

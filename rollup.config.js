@@ -1,34 +1,42 @@
-const pkg = require("./package.json");
-import babel from "rollup-plugin-babel";
-import nodeResolve from "rollup-plugin-node-resolve";
+import babel from 'rollup-plugin-babel';
+import nodeResolve from 'rollup-plugin-node-resolve';
+
+const pkg = require('./package.json');
+
 const external = Object.keys(pkg.dependencies);
 
 export default {
-  input: "./Communicator.js",
+  input: './index.js',
   plugins: [
     babel({
-      babelrc: true,
-      comments: true
+      babelrc: false,
+      presets: [['@babel/env', { modules: false }]],
+      plugins: [
+        'transform-class-properties',
+        'transform-object-rest-spread',
+        'syntax-object-rest-spread',
+      ],
+      comments: true,
     }),
     nodeResolve({
-      jsnext: true
-    })
+      jsnext: true,
+    }),
   ],
   external,
   output: [
     {
       file: pkg.rolledup,
-      format: "umd",
+      format: 'umd',
       sourcemap: true,
       strict: false,
-      exports: "named",
-      name: "reduxrestfetcher"
-    }
+      exports: 'named',
+      name: 'reduxrestfetcher',
+    },
     /* {
       file: pkg["jsnext:main"],
       format: "es",
       sourcemap: true,
       strict: false
     } */
-  ]
+  ],
 };

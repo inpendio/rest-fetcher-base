@@ -57,26 +57,6 @@
     return target;
   }
 
-  function _toConsumableArray(arr) {
-    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
-  }
-
-  function _arrayWithoutHoles(arr) {
-    if (Array.isArray(arr)) {
-      for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
-
-      return arr2;
-    }
-  }
-
-  function _iterableToArray(iter) {
-    if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
-  }
-
-  function _nonIterableSpread() {
-    throw new TypeError("Invalid attempt to spread non-iterable instance");
-  }
-
   var EXCLUDED = ['body', 'expected', 'GET'];
 
   /**
@@ -428,59 +408,9 @@
   /* GETers SETers */
   ;
 
-  var object = function object() {
-    var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    if (lodash.isObject(data)) return data;
-    var _data = false;
-
-    if (typeof data === 'string') {
-      try {
-        _data = JSON.parse(data.trim());
-      } catch (e) {
-        console.log(e);
-      }
-    }
-
-    if (_data) return _data;
-    return lodash.toPlainObject(data);
-  };
-  var array = function array() {
-    var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    if (lodash.isArray) return data;
-    return lodash.toArray(data);
-  };
-  var cumulativeArray = function cumulativeArray(check) {
-    return function () {
-      var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-      var oldData = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-      if (!data) return oldData;
-      if (!check) return oldData.concat(lodash.isArray(data) ? data : lodash.toArray(data));
-
-      var newData = _toConsumableArray(oldData);
-
-      data.forEach(function (d) {
-        var doesExist = false;
-        oldData.forEach(function (o, i) {
-          if (d[check] === o[check]) {
-            newData[i] = d;
-            doesExist = true;
-          }
-        });
-        if (!doesExist) newData.push(d);
-      });
-      return newData;
-    };
-  };
-  var Transformers = {
-    object: object,
-    array: array,
-    cumulativeArray: cumulativeArray
-  };
-
   var index = new Communicator();
 
   exports.default = index;
-  exports.transformers = Transformers;
   exports.Base = Communicator;
 
   Object.defineProperty(exports, '__esModule', { value: true });

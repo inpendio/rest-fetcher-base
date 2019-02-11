@@ -212,7 +212,8 @@
     };
 
     this.setFetch = function (_fetch) {
-      _this.fetch = _fetch;
+      var g = global || window;
+      _this.fetch = _fetch.bind(g);
     };
 
     this.setBaseOptions = function (options) {
@@ -284,6 +285,11 @@
       /* options from a singel call */
       name = arguments.length > 4 ? arguments[4] : undefined;
       var useEmptyHeaders = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
+
+      if (!_this.fetch) {
+        throw new Error('rest-fetcher-base requires fetch to be defined. Since none was found in construction you probably forgot to add one manually');
+      }
+
       var expected = requestParams.expected || 'json';
       /* let endPointUrl; */
 
@@ -383,9 +389,14 @@
     };
 
     // if request doesnt contain 'http' it will be concatinated with baseUrl
-    this.baseUrl = ''; // we will use global fetch
+    this.baseUrl = ''; // we will use global fetch if exist
 
-    this.fetch = fetch ? fetch.bind(window) : null;
+    if (typeof window !== 'undefined' && typeof fetch !== 'undefined') {
+      this.fetch = fetch.bind(window);
+    } else {
+      this.fetch = null;
+    }
+
     this.originalEndpoints = {};
     this.reducerPool = {};
     this.prefetchPool = {};

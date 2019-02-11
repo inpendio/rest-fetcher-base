@@ -6,8 +6,12 @@ class Communicator {
   constructor() {
     // if request doesnt contain 'http' it will be concatinated with baseUrl
     this.baseUrl = '';
-    // we will use global fetch
-    this.fetch = fetch ? fetch.bind(window) : null;
+    // we will use global fetch if exist
+    if (typeof window !== 'undefined' && typeof fetch !== 'undefined') {
+      this.fetch = fetch.bind(window);
+    } else {
+      this.fetch = null;
+    }
     this.originalEndpoints = {};
     this.reducerPool = {};
     this.prefetchPool = {};
@@ -42,7 +46,8 @@ class Communicator {
   };
 
   setFetch = (_fetch) => {
-    this.fetch = _fetch;
+    const g = global || window;
+    this.fetch = _fetch.bind(g);
   };
 
   setBaseOptions = (options) => {
@@ -148,6 +153,11 @@ class Communicator {
     name,
     useEmptyHeaders = false
   ) => {
+    if (!this.fetch) {
+      throw new Error(
+        'rest-fetcher-base requires fetch to be defined. Since none was found in construction you probably forgot to add one manually'
+      );
+    }
     const expected = requestParams.expected || 'json';
     /* let endPointUrl; */
     let endOption = deepMerge(

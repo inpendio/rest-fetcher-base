@@ -58,6 +58,10 @@ class Communicator {
     this.dispatch = dispatch.bind(this);
   };
 
+  setGetState = (getState) => {
+    this.getState = getState;
+  }
+
   getHelpers = () => ({
     deepMerge,
   });

@@ -224,6 +224,10 @@
       _this.dispatch = dispatch.bind(_this);
     };
 
+    this.setGetState = function (getState) {
+      _this.getState = getState;
+    };
+
     this.getHelpers = function () {
       return {
         deepMerge: deepMerge

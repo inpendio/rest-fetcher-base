@@ -60,7 +60,7 @@ class Communicator {
 
   setGetState = (getState) => {
     this.getState = getState;
-  }
+  };
 
   getHelpers = () => ({
     deepMerge,

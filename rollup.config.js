@@ -13,8 +13,11 @@ export default {
       presets: [['@babel/env', { modules: false }]],
       plugins: [
         'transform-class-properties',
-        'transform-object-rest-spread',
+        // 'transform-object-rest-spread',
+        '@babel/plugin-transform-destructuring',
+        '@babel/plugin-transform-spread',
         'syntax-object-rest-spread',
+        '@babel/plugin-transform-arrow-functions',
       ],
       comments: true,
     }),

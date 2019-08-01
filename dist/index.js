@@ -1,8 +1,8 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('lodash')) :
   typeof define === 'function' && define.amd ? define(['exports', 'lodash'], factory) :
-  (factory((global.reduxrestfetcher = {}),global.lodash));
-}(this, (function (exports,lodash) {
+  (global = global || self, factory(global.reduxrestfetcher = {}, global.lodash));
+}(this, function (exports, lodash) {
   function _typeof(obj) {
     if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
       _typeof = function (obj) {
@@ -440,10 +440,10 @@
 
   var index = new Communicator();
 
-  exports.default = index;
   exports.Base = Communicator;
+  exports.default = index;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
-})));
+}));
 //# sourceMappingURL=index.js.map

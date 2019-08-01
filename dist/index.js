@@ -202,6 +202,9 @@
     /* if (typeof request.body === 'string' && isObject(JSON.parse(request.body)))
       { return { body: request.body }; } */
 
+    if (request.body instanceof FormData) return {
+      body: request.body
+    };
     if (typeof request.body === 'string') return {
       body: request.body
     };

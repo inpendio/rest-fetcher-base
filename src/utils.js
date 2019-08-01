@@ -113,6 +113,7 @@ export const getBody = (request) => {
   if (!request.body) return false;
   /* if (typeof request.body === 'string' && isObject(JSON.parse(request.body)))
     { return { body: request.body }; } */
+  if (request.body instanceof FormData) return { body: request.body };
   if (typeof request.body === 'string') return { body: request.body };
   if (isObject(request.body)) return { body: JSON.stringify(request.body) };
   return false;

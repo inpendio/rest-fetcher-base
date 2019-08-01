@@ -1,6 +1,6 @@
 {
     "name": "rest-fetcher-base",
-    "version": "1.0.23",
+    "version": "1.0.24",
     "description": "fetch calls constructor and resolver",
     "main": "dist/index.js",
     "rolledup": "dist/index.js",

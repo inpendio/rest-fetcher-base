@@ -25,6 +25,7 @@ class Communicator {
     // actions are a collection of endpoint actions that can be exported for further use
     this.actions = {};
     this.basePrefix = 'api(.)(.)';
+    this.failStatuses = [400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 500, 501, 502, 503];
     this.baseOptions = {
       credentials: 'include',
       headers: {
@@ -61,6 +62,10 @@ class Communicator {
   setGetState = (getState) => {
     this.getState = getState;
   };
+
+  setFailedStatuses=(failStatuses) => {
+    this.failStatuses = failStatuses;
+  }
 
   getHelpers = () => ({
     deepMerge,
@@ -224,8 +229,10 @@ class Communicator {
         throw response; */
       })
       .then((json) => {
-        /* json[0]->actual response, json[1]->res object storing some metadata */
-        if (this.dispatch && this.actionEnd) {
+        if (this.failStatuses.indexOf(json[1].status) !== -1) {
+          this.dispatch(this.actionError(name, res, json[0]));
+        } else if (this.dispatch && this.actionEnd) {
+          /* json[0]->actual response, json[1]->res object storing some metadata */
           this.dispatch(this.actionEnd(name, json[0], json[1]));
         }
         if (this.postfetchPool[name]) {

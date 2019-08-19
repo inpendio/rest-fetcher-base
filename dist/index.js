@@ -246,6 +246,10 @@
       _this.getState = getState;
     };
 
+    this.setFailedStatuses = function (failStatuses) {
+      _this.failStatuses = failStatuses;
+    };
+
     this.getHelpers = function () {
       return {
         deepMerge: deepMerge
@@ -376,8 +380,10 @@
         /* }
         throw response; */
       }).then(function (json) {
-        /* json[0]->actual response, json[1]->res object storing some metadata */
-        if (_this.dispatch && _this.actionEnd) {
+        if (_this.failStatuses.indexOf(json[1].status) !== -1) {
+          _this.dispatch(_this.actionError(name, res, json[0]));
+        } else if (_this.dispatch && _this.actionEnd) {
+          /* json[0]->actual response, json[1]->res object storing some metadata */
           _this.dispatch(_this.actionEnd(name, json[0], json[1]));
         }
 
@@ -428,6 +434,7 @@
 
     this.actions = {};
     this.basePrefix = 'api(.)(.)';
+    this.failStatuses = [400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 500, 501, 502, 503];
     this.baseOptions = {
       credentials: 'include',
       headers: {

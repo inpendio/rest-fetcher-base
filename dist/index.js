@@ -324,9 +324,7 @@
       );
       /* clear headers if needed */
 
-      if (useEmptyHeaders) endOption = {
-        headers: {}
-      };
+      if (useEmptyHeaders) endOption.headers = {};
       var object = {
         actions: _this.actions,
         getState: _this.getState,

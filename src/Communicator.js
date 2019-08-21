@@ -176,7 +176,7 @@ class Communicator {
       /* we add body later */
     );
     /* clear headers if needed */
-    if (useEmptyHeaders) endOption = { headers: {} };
+    if (useEmptyHeaders) endOption.headers = {};
 
     let object = {
       actions: this.actions,

@@ -12,6 +12,7 @@ class Communicator {
     } else {
       this.fetch = null;
     }
+    this.extraHelpers = {};
     this.originalEndpoints = {};
     this.reducerPool = {};
     this.prefetchPool = {};
@@ -63,13 +64,18 @@ class Communicator {
     this.getState = getState;
   };
 
-  setFailedStatuses=(failStatuses) => {
+  setFailedStatuses = (failStatuses) => {
     this.failStatuses = failStatuses;
-  }
+  };
 
   getHelpers = () => ({
+    ...this.extraHelpers,
     deepMerge,
   });
+
+  addHelpers = (helpers) => {
+    this.extraHelpers = helpers;
+  };
 
   /**
    * @description Function that creates functions from endpont objects.

@@ -53,6 +53,8 @@ const getGetParamsAsString = (getObj) => {
   Object.keys(getObj).forEach((k, i) => {
     if (typeof getObj[k] !== 'object' && typeof getObj[k] !== 'function') {
       out = `${out + (i !== 0 ? '&' : '') + k}=${getObj[k]}`;
+    } else if (Array.isArray(getObj[k])) {
+      out = `${out + (i !== 0 ? '&' : '') + k}=${getObj[k].join(',')}`;
     }
   });
   return out;

@@ -136,6 +136,8 @@
     Object.keys(getObj).forEach(function (k, i) {
       if (_typeof(getObj[k]) !== 'object' && typeof getObj[k] !== 'function') {
         out = "".concat(out + (i !== 0 ? '&' : '') + k, "=").concat(getObj[k]);
+      } else if (Array.isArray(getObj[k])) {
+        out = "".concat(out + (i !== 0 ? '&' : '') + k, "=").concat(getObj[k].join(','));
       }
     });
     return out;
@@ -251,9 +253,13 @@
     };
 
     this.getHelpers = function () {
-      return {
+      return _objectSpread2({}, _this.extraHelpers, {
         deepMerge: deepMerge
-      };
+      });
+    };
+
+    this.addHelpers = function (helpers) {
+      _this.extraHelpers = helpers;
     };
 
     this.setEndpoints = function (endpoints) {
@@ -423,6 +429,7 @@
       this.fetch = null;
     }
 
+    this.extraHelpers = {};
     this.originalEndpoints = {};
     this.reducerPool = {};
     this.prefetchPool = {};

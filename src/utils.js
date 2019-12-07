@@ -47,7 +47,7 @@ export const deepMerge = (...args) => {
  * @param {Object} getObj - object containing GET key value pairs
  * @memberof Communicator
  */
-const getGetParamsAsString = (getObj) => {
+export const getGetParamsAsString = (getObj) => {
   if (isEmpty(getObj)) return '';
   let out = '?';
   Object.keys(getObj).forEach((k, i) => {
@@ -118,5 +118,16 @@ export const getBody = (request) => {
   if (request.body instanceof FormData) return { body: request.body };
   if (typeof request.body === 'string') return { body: request.body };
   if (isObject(request.body)) return { body: JSON.stringify(request.body) };
+  return false;
+};
+
+export const isPromise = (obj) => {
+  if (
+    !!obj
+    && (typeof obj === 'object' || typeof obj === 'function')
+    && typeof obj.then === 'function'
+  ) {
+    return true;
+  }
   return false;
 };

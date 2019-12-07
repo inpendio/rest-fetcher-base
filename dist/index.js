@@ -163,7 +163,6 @@
    * @memberof Communicator
    */
 
-
   var constructUrl = function constructUrl(endPointUrl, request, baseUrl) {
     var url = endPointUrl;
     var leftovers = {};
@@ -254,7 +253,8 @@
 
     this.getHelpers = function () {
       return _objectSpread2({}, _this.extraHelpers, {
-        deepMerge: deepMerge
+        deepMerge: deepMerge,
+        getGetParamsAsString: getGetParamsAsString
       });
     };
 
@@ -281,18 +281,42 @@
       }
     };
 
-    this.addToPostfetchPool = function (_ref2, name) {
-      var postfetch = _ref2.postfetch;
+    this.addAsyncPrefetchPool = function (_ref2, name) {
+      var asyncPrefetch = _ref2.asyncPrefetch;
+
+      if (asyncPrefetch && lodash.isFunction(asyncPrefetch) && !lodash.isArray(asyncPrefetch)) {
+        _this.asyncPrefetchPool[name] = asyncPrefetch;
+      }
+    };
+
+    this.addOnErrorPool = function (_ref3, name) {
+      var onError = _ref3.onError;
+
+      if (onError && (lodash.isFunction(onError) || lodash.isArray(onError))) {
+        _this.errorPool[name] = onError;
+      }
+    };
+
+    this.addOnSuccessPool = function (_ref4, name) {
+      var onSuccess = _ref4.onSuccess;
+
+      if (onSuccess && (lodash.isFunction(onSuccess) || lodash.isArray(onSuccess))) {
+        _this.successPool[name] = onSuccess;
+      }
+    };
+
+    this.addToPostfetchPool = function (_ref5, name) {
+      var postfetch = _ref5.postfetch;
 
       if (postfetch && (lodash.isFunction(postfetch) || lodash.isArray(postfetch))) {
         _this.postfetchPool[name] = postfetch;
       }
     };
 
-    this.addEndpointAsClassFunction = function (_ref3, name) {
-      var url = _ref3.url,
-          options = _ref3.options,
-          useEmptyHeaders = _ref3.useEmptyHeaders;
+    this.addEndpointAsClassFunction = function (_ref6, name) {
+      var url = _ref6.url,
+          options = _ref6.options,
+          useEmptyHeaders = _ref6.useEmptyHeaders;
 
       // requestParams,requestOptions can be added per request
       // and will override original params and options
@@ -307,6 +331,49 @@
 
 
       _this.actions[name] = _this[name];
+    };
+
+    this.runForError = function (name, _ref7) {
+      var res = _ref7.res,
+          message = _ref7.message;
+
+      if (_this.onError) {
+        var errFns = lodash.isArray(_this.onError) ? _this.onError : [_this.onError];
+        errFns.forEach(function (errFn) {
+          errFn({
+            name: name,
+            response: res,
+            message: message
+          });
+        });
+      }
+
+      if (_this.errorPool[name]) {
+        var _errFns = lodash.isArray(_this.errorPool[name]) ? _this.errorPool[name] : [_this.errorPool[name]];
+
+        _errFns.forEach(function (errFn) {
+          errFn({
+            name: name,
+            response: res,
+            message: message
+          });
+        });
+      }
+
+      if (_this.dispatch && _this.actionError) {
+        _this.dispatch(_this.actionError(name, res, message));
+      }
+    };
+
+    this.runPrefetchActions = function (name, options) {
+      if (_this.asyncPrefetchPool[name] && _this.getState) {
+        return _this.asyncPrefetchPool[name](options).then(function (res) {
+          if (res) return Promise.resolve(res);
+          return Promise.resolve(options);
+        });
+      }
+
+      return Promise.resolve(options);
     };
 
     this.baseFetch = function (url) {
@@ -340,83 +407,122 @@
         url: url,
         helpers: _this.getHelpers()
       };
+      return _this.runPrefetchActions(name, object).then(function (_object) {
+        var allObject = _object;
 
-      if (_this.prefetchPool[name] && _this.getState) {
-        /* we need this to be an array... */
-        var pf = lodash.isArray(_this.prefetchPool[name]) ? _this.prefetchPool[name] : [_this.prefetchPool[name]];
-        /* you can either change object directly or return {params, options} */
-
-        pf.forEach(function (e) {
-          var res = e(object);
-          if (res) object = deepMerge(object, res);
-        });
-      }
-
-      endOption = deepMerge(object.options, getBody(object.params));
-      var endPointUrl = constructUrl(object.url, object.params, _this.baseUrl);
-      /* if no dispatch return promise */
-
-      /* if (!this.dispatch || this.dispatch === null) {
-        return this.fetch(endPointUrl, endOption);
-      } */
-
-      /* dispatch action start */
-
-      if (_this.dispatch && _this.actionStart) {
-        _this.dispatch(_this.actionStart(name, endPointUrl, endOption));
-      }
-      /* fetch part */
-
-
-      var res;
-      return _this.fetch(endPointUrl, endOption).then(function (response) {
-        /* this object will be passes to second .then to be included in END dispatch */
-        res = {
-          ok: response.ok,
-          redirected: response.redirected,
-          status: response.status,
-          type: response.type,
-          url: response.url
-        };
-        /* if (positiveResponseStatus.indexOf(response.status) !== -1 || response.ok) { */
-
-        return Promise.all([response[expected](), Promise.resolve(res)]);
-        /* }
-        throw response; */
-      }).then(function (json) {
-        if (_this.failStatuses.indexOf(json[1].status) !== -1) {
-          _this.dispatch(_this.actionError(name, res, json[0]));
-        } else if (_this.dispatch && _this.actionEnd) {
-          /* json[0]->actual response, json[1]->res object storing some metadata */
-          _this.dispatch(_this.actionEnd(name, json[0], json[1]));
+        if (_this.prefetchPool[name] && _this.getState) {
+          var pf = lodash.isArray(_this.prefetchPool[name]) ? _this.prefetchPool[name] : [_this.prefetchPool[name]];
+          pf.forEach(function (prefetch) {
+            var res = prefetch(allObject);
+            if (res) allObject = deepMerge(object, res);
+          });
         }
 
-        if (_this.postfetchPool[name]) {
+        endOption = deepMerge(allObject.options, getBody(allObject.params));
+        var endPointUrl = constructUrl(allObject.url, allObject.params, _this.baseUrl);
+        /* if no dispatch return promise */
+
+        /* if (!this.dispatch || this.dispatch === null) {
+        return this.fetch(endPointUrl, endOption);
+        } */
+
+        /* dispatch action start */
+
+        if (_this.dispatch && _this.actionStart) {
+          _this.dispatch(_this.actionStart(name, endPointUrl, endOption));
+        }
+        /* fetch part */
+
+
+        var res;
+        return _this.fetch(endPointUrl, endOption).then(function (response) {
+          /* this object will be passes to second .then to be included in END dispatch */
+          res = {
+            ok: response.ok,
+            redirected: response.redirected,
+            status: response.status,
+            type: response.type,
+            url: response.url
+          };
+          /* if (positiveResponseStatus.indexOf(response.status) !== -1 || response.ok) { */
+
+          return Promise.all([response[expected](), Promise.resolve(res)]);
+          /* }
+          throw response; */
+        }).then(function (json) {
           var pfObj = {
             actions: _this.actions,
             getState: _this.getState,
             dispatch: _this.dispatch,
             data: json[0],
+            response: json[1],
             helpers: _this.getHelpers()
           };
 
-          var _pf = lodash.isArray(_this.postfetchPool[name]) ? _this.postfetchPool[name] : [_this.postfetchPool[name]];
+          if (_this.failStatuses.indexOf(json[1].status) !== -1) {
+            _this.runForError(name, {
+              res: res,
+              message: json[0]
+            }); // this.dispatch(this.actionError(name, res, json[0]));
 
-          _pf.forEach(function (e) {
-            var rpf = e(pfObj);
-            /* if object is return -> deepMerge it */
+          } else {
+            if (_this.successPool[name]) {
+              var sc = lodash.isArray(_this.successPool[name]) ? _this.successPool[name] : [_this.successPool[name]];
+              sc.forEach(function (e) {
+                var rpf = e(pfObj);
+                /* if object is return -> deepMerge it */
 
-            if (rpf) pfObj = deepMerge(pfObj, rpf);
+                if (rpf) pfObj = deepMerge(pfObj, rpf);
+              });
+            }
+            /* json[0]->actual response, json[1]->res object storing some metadata */
+
+
+            if (_this.dispatch && _this.actionEnd) {
+              _this.dispatch(_this.actionEnd(name, json[0], json[1]));
+            }
+          }
+
+          if (_this.postfetchPool[name]) {
+            var _pf = lodash.isArray(_this.postfetchPool[name]) ? _this.postfetchPool[name] : [_this.postfetchPool[name]];
+
+            _pf.forEach(function (e) {
+              var rpf = e(pfObj);
+              /* if object is return -> deepMerge it */
+
+              if (rpf) pfObj = deepMerge(pfObj, rpf);
+            });
+
+            return Promise.resolve(pfObj.data);
+          }
+
+          return Promise.resolve(json[0]);
+        })["catch"](function (e) {
+          _this.runForError(name, {
+            message: e.message,
+            res: res
           });
+          /* if (this.onError) {
+            const errFns = isArray(this.onError)
+              ? this.onError[name]
+              : [this.onError[name]];
+            errFns.forEach((errFn) => {
+              errFn({ name, response: res, message: e.message });
+            });
+          }
+          if (this.errorPool[name]) {
+            const errFns = isArray(this.errorPool[name])
+              ? this.onError[name]
+              : [this.onError[name]];
+            errFns.forEach((errFn) => {
+              errFn({ name, response: res, message: e.message });
+            });
+          }
+          if (this.dispatch && this.actionError) {
+            this.dispatch(this.actionError(name, res, e.message));
+          } */
 
-          return Promise.resolve(pfObj.data);
-        }
-
-        return Promise.resolve(json[0]);
-      })["catch"](function (e) {
-        if (_this.dispatch && _this.actionError) {
-          _this.dispatch(_this.actionError(name, res, e.message));
-        }
+        });
       });
     };
 
@@ -435,7 +541,11 @@
     this.prefetchPool = {};
     this.postfetchPool = {};
     this.transformerPool = {};
-    this.endpointCreationPool = [this.addToPrefetchPool, this.addToPostfetchPool, this.addEndpointAsClassFunction]; // actions are a collection of endpoint actions that can be exported for further use
+    this.asyncPrefetchPool = {};
+    this.successPool = {};
+    this.errorPool = {};
+    this.onError = [];
+    this.endpointCreationPool = [this.addToPrefetchPool, this.addToPostfetchPool, this.addEndpointAsClassFunction, this.addAsyncPrefetchPool, this.addOnErrorPool, this.addOnSuccessPool]; // actions are a collection of endpoint actions that can be exported for further use
 
     this.actions = {};
     this.basePrefix = 'api(.)(.)';
